@@ -1,11 +1,5 @@
-# web-scraper-template
-Bootstraped node/cheerio script to scrape a webpage then upload the data as json to Google Cloud services where it can be accessed by a react-app.
+# B.C. wildfire data scraper    
 
-TO UPLOAD TO DIGITAL OCEAN SPACE (vs-postmedia-data): 
-1. get KEY & SECRET from DO space
-2. create .env file in `config` directory. Should look like so:
-SPACES_KEY="XXX"
-SPACES_SECRET="XXX"
+Downloads current wildfire data from 'https://pub.data.gov.bc.ca/datasets/2790e3f7-6395-4230-8545-04efb5a18800/prot_current_fire_points.zip' & converts to csv/json.
 
-Sync git & heroku
-https://devcenter.heroku.com/articles/git#creating-a-heroku-remote
+Scheduled to run daily at 2a.m. (wildfire data is typically updated around midnight daily)

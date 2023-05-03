@@ -1,63 +1,57 @@
 const fs = require('fs');
 const axios = require('axios');
-const { Parser } = require('json2csv');
+// const unzip = require('unzip');
+const unzipper = require('unzipper');
+const Parser = require('rss-parser');
+const shp2json = require('shapefile');
+// // const JSONStream = require('JSONStream');
+
 const uploadFile = require('./scripts/upload-file');
-const cheerioScraper = require('./scripts/cheerioScraper');
-const puppeteerScraper = require('./scripts/puppeteerScraper');
+// const fetchFire = require('./modules/fetch-fire');
+
 
 // VARS
-const data_dir = './data';
-const urls = ['https://www.gasbuddy.com/GasPrices/British%20Columbia/']; // URL to scrape
+const data_dir = 'data';
 const bucket = 'vs-postmedia-data'; // cloud storage bucket
-const filename = 'data.csv'; // temp file for data
 
 
-async function downloadHTML(urls, useCheerio) {
-	let html;
-	// get first url in the list
-	const url = urls.shift();
-	// clean it up a bit to use as a filename
-	const cleanUrl = url.split('//')[1].replace(/\//g, '_');
-	const htmlFilename = `${data_dir}/${cleanUrl}.html`;
+//  WILDFIRE URLS
+const current_fire_url = 'https://pub.data.gov.bc.ca/datasets/2790e3f7-6395-4230-8545-04efb5a18800/prot_current_fire_points.zip'
+const wildfire_rss_feed = 'http://bcfireinfo.for.gov.bc.ca/FTP/!Project/WildfireNews/xml/All-WildfireNews.xml';
+const wildfire_perimeters_url = 'https://pub.data.gov.bc.ca/datasets/cdfc2d7b-c046-4bf0-90ac-4897232619e1/prot_current_fire_polys.zip';
+
+// WILDFIRE SHAPEFILE DATA
+const shape_file_directory = `${data_dir}/current-fires`;
+const tmp_zip_file = `${shape_file_directory}/current-fires.zip`;
+const current_fires_shp = `${shape_file_directory}/prot_current_fire_points.shp`;
+const fon_perims_shp = `${shape_file_directory}/prot_current_fire_polys.shp`;
+
+
+// FUNCTIONS
+
+// download & unzip current fire data in shapefile form
+async function downloadAndUnzip(url) {
+	let streamResponse;
+	// stream writer where we'll download the data
+	const writeStream = fs.createWriteStream(tmp_zip_file, {flag: 'wx'});
 	
-	// check if we already have the file downloaded
-	const fileExists = fs.existsSync(htmlFilename);
-	
-	if (!fileExists) {
-		// download the HTML from the web server
-		console.log(`Downloading HTML from ${url}...`);
-		// fetchDeaths & fetchCases & other files
-		html = await axios.get(url);
-		
-		// save the HTML to disk
-		try {
-			await fs.promises.writeFile(htmlFilename, html);
-		} catch(err) { 
-			console.log(err);
-		}
-	} else {
-		console.log(`Skipping download for ${url} since ${cleanUrl} already exists.`);
-	}
-	
-	// load local copy of html
-	html = await fs.readFileSync(htmlFilename);
+	writeStream.on('open', async f => {
+		// request
+		streamResponse = await axios({
+			url,
+			method: 'GET',
+			responseType: 'stream'
+		});
 
-	// scrape downloaded file
-	const results = await processHTML(html, true);
+		// write zip file data
+		streamResponse.data.pipe(writeStream);
+	});
 
-	// if there's more links, let's do it again!
-	if(urls.length > 0) {
-		console.log('Downloading next url...');
-		downloadHTML(urls, true);
-	} else {
-		saveData(results, filename, 'csv');
-	}
+	writeStream.on('finish', unzipCurrentFires);
+	writeStream.on('error', (err) => console.log(err));
 }
 
-// scrape & cache results
-async function processHTML(html, useCheerio) {
-	return (useCheerio) ? await cheerioScraper(html) : puppeteerScraper(html);
-}
+
 
 function saveData(data, filename, format) {
 	console.log(`Saving data to ${filename}`);
@@ -82,9 +76,21 @@ function saveData(data, filename, format) {
 	// uploadFile(bucket, filename, format, './data');
 }
 
-// 
-downloadHTML(urls, true); // set 'useCheerio' to false to run puppeteer
+function unzipCurrentFires() {
+	fs.createReadStream(tmp_zip_file)
+		.pipe(unzipper.Extract({ path: shape_file_directory }))
+		.on('close', convert2json);
+}
 
+function convert2json() {
+	console.log('Finished writing zip file!');
+}
 
+async function init() {
+	// download & convert current fires to geojson
+	await downloadAndUnzip(current_fire_url);
 
+	console.log('DAAAAAAMN.... son!')
+}
 
+init();
