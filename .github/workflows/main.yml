@@ -10,10 +10,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# required for python/github bug. may not be req'd
-env:
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: true 
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -29,7 +25,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: Use Nodejs ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         # github sets this for you
         with:
@@ -41,23 +37,4 @@ jobs:
         run: |
           npm ci
 
-      # Runs our python script
-      - name: Get latest wildire data from B.C. gov't
-        run: |
-          node index.js
-
-      # Commits files
-      - name: Commit results
-        run: |
-          git config --global user.email "action@hgithub.com"
-          git config --global user.name "Github action"
-          git commit -am "ran data update script"
-          
-      # Push changes
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # github sets this for you
-        run: |
-          git push
-
-  
+     
