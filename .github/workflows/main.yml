@@ -37,4 +37,23 @@ jobs:
         run: |
           npm ci
 
-     
+      # Runs scraper
+      - name: Get latest wildire data from B.C. gov't
+        run: |
+          node index.js
+
+      # Commits files
+      - name: Commit results
+        run: |
+          git config --global user.email "action@hgithub.com"
+          git config --global user.name "Github action"
+          git commit -am "ran data update script"
+          
+      # Push changes
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # github sets this for you
+        run: |
+          git push
+
+  

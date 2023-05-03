@@ -1,18 +1,12 @@
 const fs = require('fs');
 const axios = require('axios');
-// const unzip = require('unzip');
 const unzipper = require('unzipper');
 const Parser = require('rss-parser');
 const shp2json = require('shapefile');
-// // const JSONStream = require('JSONStream');
-
-const uploadFile = require('./scripts/upload-file');
-// const fetchFire = require('./modules/fetch-fire');
 
 
 // VARS
 const data_dir = 'data';
-const bucket = 'vs-postmedia-data'; // cloud storage bucket
 
 
 //  WILDFIRE URLS
@@ -28,7 +22,9 @@ const fon_perims_shp = `${shape_file_directory}/prot_current_fire_polys.shp`;
 
 
 // FUNCTIONS
-
+function convert2json() {
+	console.log('Finished writing zip file!');
+}
 // download & unzip current fire data in shapefile form
 async function downloadAndUnzip(url) {
 	let streamResponse;
@@ -51,8 +47,6 @@ async function downloadAndUnzip(url) {
 	writeStream.on('error', (err) => console.log(err));
 }
 
-
-
 function saveData(data, filename, format) {
 	console.log(`Saving data to ${filename}`);
 
@@ -71,19 +65,12 @@ function saveData(data, filename, format) {
 			console.error(err);
 		}
 	}
-	
-	// upload to Google Cloud
-	// uploadFile(bucket, filename, format, './data');
 }
 
 function unzipCurrentFires() {
 	fs.createReadStream(tmp_zip_file)
 		.pipe(unzipper.Extract({ path: shape_file_directory }))
 		.on('close', convert2json);
-}
-
-function convert2json() {
-	console.log('Finished writing zip file!');
 }
 
 async function init() {
