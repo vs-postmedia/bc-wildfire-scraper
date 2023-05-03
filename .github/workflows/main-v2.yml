@@ -40,6 +40,10 @@ jobs:
       - name: Get latest wildire data from B.C. gov't
         run: |
           node index.js
+          
+      - name: list files
+        run:  |
+          ls ${{ github.workspace }}
 
       # Commits files
       - name: Commit results
