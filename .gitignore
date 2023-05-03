@@ -1,6 +1,6 @@
 .env
 .DS_Store
-# data/current-fires/*
+data/current-fires/prot_current_fire_points.*
 
 
 # Logs
