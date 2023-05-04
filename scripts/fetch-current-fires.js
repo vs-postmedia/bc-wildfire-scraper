@@ -26,7 +26,7 @@ async function convert2json() {
 				const data = result.value;
 				data.properties.last_update = Date.now();
 				// fire name
-				let name = props.INCIDNT_NM !== null ? props.INCIDNT_NM : props.GEOGRAPHIC;
+				let name = data.properties.INCIDNT_NM !== null ? data.properties.INCIDNT_NM : data.properties.GEOGRAPHIC;
 				name = name === 'null' ? 'Unnamed fire' : name;
 				// lon/lat coords
 				data.geometry.coordinates = [data.properties.LONGITUDE, data.properties.LATITUDE];
