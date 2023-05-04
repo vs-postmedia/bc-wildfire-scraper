@@ -36,6 +36,8 @@ async function convert2json() {
 
 				const data = result.value;
 				data.properties.last_update = Date.now();
+				// lon/lat coords
+				data.geometry.coordinates = [data.properties.LONGITUDE, data.properties.LATITUDE];
 				// data.properties.fon = fon_ids.includes(parseInt(fire.FIRE_NT_ID));
 				data.properties.ignition_date = returnHumanReadableDate(data.properties.IGNITN_DT);
 				
