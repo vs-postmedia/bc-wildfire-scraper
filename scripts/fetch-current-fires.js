@@ -13,11 +13,6 @@ let currentFires = {
 	features: []
 };
 
-//  WILDFIRE URLS
-const current_fire_url = 'https://pub.data.gov.bc.ca/datasets/2790e3f7-6395-4230-8545-04efb5a18800/prot_current_fire_points.zip'
-const wildfire_perimeters_url = 'https://pub.data.gov.bc.ca/datasets/cdfc2d7b-c046-4bf0-90ac-4897232619e1/prot_current_fire_polys.zip';
-
-
 
 // FUNCTIONS
 async function convert2json() {
@@ -93,7 +88,7 @@ function unzipCurrentFires() {
 		.on('close', convert2json);
 }
 
-async function fetchCurrentFires(dir) {
+async function fetchCurrentFires(dir, current_fire_url) {
     // set data directory & current year
     data_dir = dir;
     current_year = new Date().getUTCFullYear();
