@@ -40,23 +40,29 @@ jobs:
       - name: Get latest wildire data from B.C. gov't
         run: |
           node index.js
-          
-      - name: list files
-        run:  |
-          ls ${{ github.workspace }}
 
-      # Commits files
-      - name: Commit results
-        run: |
-          git config --global user.email "action@hgithub.com"
-          git config --global user.name "Github action"
-          git commit -am "ran data update script"
+      # Commit changes
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          # Defaults to "Apply automatic changes"
+          commit_message: Updated with latest fire data
           
-      # Push changes
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # github sets this for you
-        run: |
-          git push
+      # - name: list files
+      #   run:  |
+      #     ls ${{ github.workspace }}
+
+      # # Commits files
+      # - name: Commit results
+      #   run: |
+      #     git config --global user.email "action@hgithub.com"
+      #     git config --global user.name "Github action"
+      #     git commit -am "ran data update script"
+          
+      # # Push changes
+      # - name: Push changes
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # github sets this for you
+      #   run: |
+      #     git push
 
   
