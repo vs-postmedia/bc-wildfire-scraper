@@ -27,7 +27,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
-        # github sets this for you
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -46,23 +45,5 @@ jobs:
         with:
           # Defaults to "Apply automatic changes"
           commit_message: Updated with latest fire data
-          
-      # - name: list files
-      #   run:  |
-      #     ls ${{ github.workspace }}
-
-      # # Commits files
-      # - name: Commit results
-      #   run: |
-      #     git config --global user.email "action@hgithub.com"
-      #     git config --global user.name "Github action"
-      #     git commit -am "ran data update script"
-          
-      # # Push changes
-      # - name: Push changes
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # github sets this for you
-      #   run: |
-      #     git push
 
   
