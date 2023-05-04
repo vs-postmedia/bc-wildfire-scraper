@@ -91,7 +91,7 @@ function unzipCurrentFires() {
 		.on('close', convert2json);
 }
 
-async function fetchCurrentFires(dir, current_fire_url) {
+async function init(dir, current_fire_url) {
     // set data directory & current year
     data_dir = dir;
     current_year = new Date().getUTCFullYear();
@@ -106,4 +106,4 @@ async function fetchCurrentFires(dir, current_fire_url) {
 	downloadAndUnzip(current_fire_url);
 }
 
-module.exports = fetchCurrentFires;
+module.exports = init;
