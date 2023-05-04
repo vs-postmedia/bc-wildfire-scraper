@@ -7,7 +7,7 @@ const saveData = require('./save-data');
 
 
 // VARS
-let data_dir, fon_ids, shape_file_directory, tmp_zip_file, current_fires_shp, fon_perims_shp;
+let current_year, data_dir, fon_ids, shape_file_directory, tmp_zip_file, current_fires_shp, fon_perims_shp;
 let currentFires = {
 	type: 'FeatureCollection',
 	features: []
@@ -43,7 +43,10 @@ async function convert2json() {
 				if (data.properties.CURRENT_SZ === null) {
 					data.properties.CURRENT_SZ = 0;
 				}
-				currentFires.features.push(data);
+
+				if (data.properties.FIRE_YEAR === current_year) {
+                    currentFires.features.push(data);
+                }
 
 				// process the next line
 				return src.read().then(next);
@@ -92,7 +95,10 @@ function unzipCurrentFires() {
 }
 
 async function fetchCurrentFires(dir) {
+    // set data directory & current year
     data_dir = dir;
+    current_year = new Date().getUTCFullYear();
+
     // WILDFIRE SHAPEFILE DATA
     shape_file_directory = `${data_dir}/current-fires`;
     tmp_zip_file = `${shape_file_directory}/current-fires.zip`;
