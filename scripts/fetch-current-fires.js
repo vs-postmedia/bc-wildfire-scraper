@@ -27,7 +27,7 @@ async function convert2json() {
 				data.properties.last_update = Date.now();
 				// fire name
 				let name = data.properties.INCIDNT_NM !== null ? data.properties.INCIDNT_NM : data.properties.GEOGRAPHIC;
-				name = name === 'null' ? 'Unnamed fire' : name;
+				data.properties.fire_name = name === 'null' ? 'Unnamed fire' : name;
 				// lon/lat coords
 				data.geometry.coordinates = [data.properties.LONGITUDE, data.properties.LATITUDE];
 				// data.properties.fon = fon_ids.includes(parseInt(fire.FIRE_NT_ID));
