@@ -4,7 +4,7 @@ name: Wildfire data scraper
 
 # Controls when the workflow will run
 on:
-  # schedule:
+  schedule:
   - cron: "0 2 * * *" #2am daily. https://crontab.guru/examples.html
 
   # Allows you to run this workflow manually from the Actions tab
