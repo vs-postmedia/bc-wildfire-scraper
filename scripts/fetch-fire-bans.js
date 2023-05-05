@@ -35,12 +35,12 @@ async function processHTML(html) {
 			} else if (alt_tag.includes('permitted')) {
 				// alt_tag = 'U+2705';
 				alt_tag = '✅';
-			} else if (alt_tag.includes('ban')) {
-				// alt_tag = 'U+26D4';
-				alt_tag = '🚫';
 			} else if (alt_tag.includes('more information')) {
 				// alt_tag = 'U+26A0';
 				alt_tag = '⚠️';
+			} else if (alt_tag.includes('ban')) {
+				// alt_tag = 'U+26D4';
+				alt_tag = '🚫';
 			}
 			
 			row.push(alt_tag);
