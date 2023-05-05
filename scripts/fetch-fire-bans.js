@@ -8,7 +8,7 @@ let data;
 const data_dir = 'data/';
 const filename = 'fire-bans.csv'; // temp file for data
 
-const header_row = ['Fire centre', 'Campfires', 'Open fire (cat. 2)', 'Open fire (cat. 3)', 'Forest use restrictions'];
+const header_row = ['Fire centre', 'Campfires', 'Category 2 open burning', 'Category 3 open burning', 'Forest use restrictions'];
  
 async function processHTML(html) {
 	console.log('Processing html...');
