@@ -1,4 +1,5 @@
 const fs = require('fs');
+let Parser = require('@json2csv/plainjs').Parser;
 
 async function saveData(data, filename, format, data_dir) {
 	console.log(`Saving data to ${filename}`);
@@ -12,8 +13,11 @@ async function saveData(data, filename, format, data_dir) {
 		}
 	} else {
 		try {
-			const parser = new Parser();
-			fs.writeFileSync(`${data_dir}/${filename}`, parser.parse(data));
+			const parser = new Parser({
+				header: false,
+				withBOM: true
+			});
+			fs.writeFileSync(`${data_dir}/${filename}.${format}`, parser.parse(data));
 		} catch (err) {
 			console.error(err);
 		}
