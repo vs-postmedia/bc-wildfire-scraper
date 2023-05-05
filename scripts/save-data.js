@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function saveData(data, filename, format, data_dir) {
+async function saveData(data, filename, format, data_dir) {
 	console.log(`Saving data to ${filename}`);
 
 	// save file locally

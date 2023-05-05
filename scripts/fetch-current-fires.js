@@ -1,7 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
 const unzipper = require('unzipper');
-const Parser = require('rss-parser');
 const shapefile = require('shapefile');
 const saveData = require('./save-data');
 
@@ -52,9 +51,15 @@ async function convert2json() {
 		.catch(err => console.error(err.stack));
 
 	console.log('Done processing shapefiles...');
-	saveData(currentFires, 'wildfires', 'json', data_dir);
+	await saveData(currentFires, 'wildfires', 'json', data_dir);
 }
 
+function cleanUp() {
+    // delete shapefiles directory
+    fs.rm(shape_file_directory, { recursive: true}, err => {
+        if (err) console.error(err)
+    });
+}
 // download & unzip current fire data in shapefile form
 async function downloadAndUnzip(url) {
 	let streamResponse;
