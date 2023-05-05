@@ -40,9 +40,10 @@ async function convert2json() {
 					data.properties.CURRENT_SZ = 0;
 				}
 
-				if (data.properties.FIRE_YEAR === current_year) {
-                    currentFires.features.push(data);
-                }
+				// only keep fires that started in 2023
+				// if (data.properties.FIRE_YEAR === current_year) {
+                //     currentFires.features.push(data);
+                // }
 
 				// process the next line
 				return src.read().then(next);
