@@ -11,14 +11,14 @@ const output_file = '../data/daily-max-dispersion.png'
 const url = 'https://firesmoke.ca/forecasts/current/dispersion.kmz';
 
 async function init() {
-    console.log('hello!')
+    console.log('Fetching firesmoke data...')
 
     // get the kmz file & unzip it
     await fetchFile(url);
 }
 
 function cleanUp() {
-    console.log('cleaning up');
+    console.log('Removing KMZ file...');
     // delete kmz file
     fs.unlink(tmp_zip_file, err => {
         if (err && err.code === 'ENOENT') console.info('Error: No such file');

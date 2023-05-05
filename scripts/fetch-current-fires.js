@@ -52,9 +52,12 @@ async function convert2json() {
 
 	console.log('Done processing shapefiles...');
 	await saveData(currentFires, 'wildfires', 'json', data_dir);
+	// delete shapefiles
+	cleanUp();
 }
 
 function cleanUp() {
+	console.log(shape_file_directory)
     // delete shapefiles directory
     fs.rm(shape_file_directory, { recursive: true}, err => {
         if (err) console.error(err)
