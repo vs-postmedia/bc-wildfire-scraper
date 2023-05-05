@@ -1,5 +1,5 @@
 const fetchCurrentFires = require('./scripts/fetch-current-fires');
-const fetchSmokeData = require('./fetch-smoke-data');
+const fetchSmokeData = require('./scripts/fetch-smoke-data');
 
 // VARS
 const data_dir = 'data';
