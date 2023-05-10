@@ -13,10 +13,10 @@ async function init() {
 	fetchCurrentFires(data_dir, current_fires_url);
 
 	// get latest firesmoke data
-	// fetchSmokeData();
+	fetchSmokeData();
 
 	// get latest fire ban data
-	// fetchFireBans(fire_bans_url);
+	fetchFireBans(fire_bans_url);
 }
 
 init();
