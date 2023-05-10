@@ -45,11 +45,14 @@ async function convert2json() {
                 //     currentFires.features.push(data);
                 // }
 
+				currentFires.features.push(data);
+
 				// process the next line
 				return src.read().then(next);
 			})
 		)
 		.catch(err => console.error(err.stack));
+
 
 	console.log('Done processing shapefiles...');
 	await saveData(currentFires, 'wildfires', 'json', data_dir);
@@ -58,11 +61,18 @@ async function convert2json() {
 }
 
 function cleanUp() {
-	console.log(shape_file_directory)
-    // delete shapefiles directory
-    fs.rm(shape_file_directory, { recursive: true}, err => {
-        if (err) console.error(err)
-    });
+	const ext = ['dbf', 'prj', 'shp', 'shx'];
+
+	// delete shapefiles 
+	ext.forEach((d,i) => {
+		fs.rm(`data/prot_current_fire_points.${d}`, { recursive: true}, err => {
+			if (err) console.error(err)
+		});
+	});
+	// & the zip file
+	fs.rm(`data/current-fires.zip`, { recursive: true}, err => {
+		if (err) console.error(err)
+	});
 }
 // download & unzip current fire data in shapefile form
 async function downloadAndUnzip(url) {
@@ -106,10 +116,10 @@ async function init(dir, current_fire_url) {
     current_year = new Date().getUTCFullYear();
 
     // WILDFIRE SHAPEFILE DATA
-    shape_file_directory = `${data_dir}/current-fires`;
+    shape_file_directory = `${data_dir}`;
     tmp_zip_file = `${shape_file_directory}/current-fires.zip`;
     current_fires_shp = `${shape_file_directory}/prot_current_fire_points.shp`;
-    fon_perims_shp = `${shape_file_directory}/prot_current_fire_polys.shp`;
+    // fon_perims_shp = `${shape_file_directory}/prot_current_fire_polys.shp`;
 	
     // download & convert current fires to geojson
 	downloadAndUnzip(current_fire_url);
