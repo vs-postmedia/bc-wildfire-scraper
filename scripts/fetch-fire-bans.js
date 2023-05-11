@@ -27,9 +27,9 @@ async function processHTML(html) {
 		row.push($(el).find('th > a').text());
 
 		$(el).find('td').each((i, el) => {
+			let url = $(el).find('a').attr('href');
 			let alt_tag = $(el).find('img').attr('alt');
 
-			// console.log(alt_tag)
 			if (typeof(alt_tag) !== 'string') {
 				alt_tag = 'None';
 			} else if (alt_tag.includes('permitted')) {
@@ -37,10 +37,10 @@ async function processHTML(html) {
 				alt_tag = '✅';
 			} else if (alt_tag.includes('more information')) {
 				// alt_tag = 'U+26A0';
-				alt_tag = '⚠️';
+				alt_tag = `[⚠️](${url})`;
 			} else if (alt_tag.includes('ban')) {
 				// alt_tag = 'U+26D4';
-				alt_tag = '🚫';
+				alt_tag = `[🚫](https://alpha.gov.bc.ca${url})`;
 			}
 			
 			row.push(alt_tag);
@@ -49,7 +49,6 @@ async function processHTML(html) {
 		data.push(row);
 	});
 
-	console.log(data)
 	return data;
 }
 
