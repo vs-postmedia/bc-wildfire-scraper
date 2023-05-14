@@ -40,7 +40,8 @@ async function processHTML(html) {
 				alt_tag = `[⚠️](${url})`;
 			} else if (alt_tag.includes('ban')) {
 				// alt_tag = 'U+26D4';
-				alt_tag = `[🚫](https://alpha.gov.bc.ca${url})`;
+				url = url.startsWith('https') ? url : `https://alpha.gov.bc.ca/${url}`;
+				alt_tag = `[🚫](${url})`;
 			}
 			
 			row.push(alt_tag);
