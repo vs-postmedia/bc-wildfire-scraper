@@ -12,9 +12,9 @@ const header_row = ['Fire centre', 'Campfires', 'Category 2 open burning', 'Cate
  
 async function processHTML(html) {
 	console.log('Processing html...');
+	
 	let data = [];
 	const $ = await cheerio.load(html);
-
 	const html_text = $.html();
 
 	// add header row
@@ -22,6 +22,7 @@ async function processHTML(html) {
 
 	// do some scraping
 	$('#body > table > tbody > tr').each((i, el) => {
+		console.log(el.text)
 		const row = [];
 		// fire centre names
 		row.push($(el).find('th > a').text());
@@ -43,7 +44,7 @@ async function processHTML(html) {
 				url = url.startsWith('https') ? url : `https://alpha.gov.bc.ca${url}`;
 				alt_tag = `[🚫](${url})`;
 			}
-			
+			console.log(row)
 			row.push(alt_tag);
 		});
 		
