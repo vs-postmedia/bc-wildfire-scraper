@@ -22,7 +22,6 @@ async function processHTML(html) {
 
 	// do some scraping
 	$('#body > table > tbody > tr').each((i, el) => {
-		console.log(el.text)
 		const row = [];
 		// fire centre names
 		row.push($(el).find('th > a').text());
@@ -38,13 +37,13 @@ async function processHTML(html) {
 				alt_tag = '✅';
 			} else if (alt_tag.includes('more information')) {
 				// alt_tag = 'U+26A0';
+				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca/${url}`;
 				alt_tag = `[⚠️](${url})`;
 			} else if (alt_tag.includes('ban')) {
 				// alt_tag = 'U+26D4';
-				url = url.startsWith('https') ? url : `https://alpha.gov.bc.ca${url}`;
+				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca/${url}`;
 				alt_tag = `[🚫](${url})`;
 			}
-			console.log(row)
 			row.push(alt_tag);
 		});
 		
