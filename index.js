@@ -11,10 +11,10 @@ const fire_bans_url = 'https://www2.gov.bc.ca/gov/content/safety/wildfire-status
 async function init() {
 
 	// get current fires from BC data
-	// fetchCurrentFires(data_dir, current_fires_url);
+	fetchCurrentFires(data_dir, current_fires_url);
 
 	// get latest firesmoke data
-	// fetchSmokeData();
+	fetchSmokeData();
 
 	// get latest fire ban data
 	fetchFireBans(fire_bans_url);
