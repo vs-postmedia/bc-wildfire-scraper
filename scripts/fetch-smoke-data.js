@@ -29,19 +29,23 @@ async function fetchFile(url) {
     // stream writer where we'll download the data
     const writeStream = fs.createWriteStream(tmp_zip_file, {flag: 'wx'});
         
-    writeStream.on('open', async f => {
-        // request
-        streamResponse = await axios({
-            url,
-            method: 'GET',
-            responseType: 'stream'
+    try {
+        writeStream.on('open', async f => {
+            // request
+            streamResponse = await axios({
+                url,
+                method: 'GET',
+                responseType: 'stream'
+            });
+
+            // write zip file data
+            streamResponse.data.pipe(writeStream);
         });
 
-        // write zip file data
-        streamResponse.data.pipe(writeStream);
-    });
-
-    writeStream.on('finish', unzipKMZ);
+        writeStream.on('finish', unzipKMZ);
+    } catch(err) {
+        console.err(err)
+    }
 }
 
 function getCurrentDate() {
