@@ -30,7 +30,7 @@ async function init() {
 	});
 
 	// save to local file
-	saveData(results, 'aqhi-data', 'csv', data_dir);
+	saveData(results, 'aqhi-data', 'csv', data_dir, true);
 }
 
 // Function to convert CSV data to JSON
