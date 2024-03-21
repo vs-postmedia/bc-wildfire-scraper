@@ -6,3 +6,9 @@ Downloads:
 * AQHI forecast data from: https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv
 
 Scheduled to run daily at 2a.m. (wildfire data is typically updated around midnight daily)
+
+
+Powers the Vancouver Sun wildfire tracker map:
+* map: https://github.com/vs-postmedia/wildfire-tracker-v3
+* fire bans: https://app.flourish.studio/visualisation/13660496/edit
+* aqhi: https://github.com/vs-postmedia/aqhi-forecast-table
