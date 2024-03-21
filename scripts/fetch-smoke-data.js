@@ -25,6 +25,7 @@ function cleanUp() {
         else if (err) console.error(err);
     });
 }
+
 async function fetchFile(url) {
     // stream writer where we'll download the data
     const writeStream = fs.createWriteStream(tmp_zip_file, {flag: 'wx'});

@@ -1,26 +1,23 @@
-import fs from 'fs';
-import path from 'path';
-import axios from 'axios';
-import saveData from './scripts/save-data.js';
-
+const fs = require('fs');
+const path = require('path')
+const axios = require('axios');
+const saveData = require('./save-data');
 
 // VARS
 const data_dir = 'data';
 const filename = 'aqhi-data';
-const url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv'; // URL to scrape
+const url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv';
 
-async function init(url) {
-	console.log(`Fetching data from ${url}`)
+
+// FUNCTIONS
+async function init() {
+	console.log(`Fetching AQHI data from ${url}`)
 	const csv = await axios.get(url);
 	let json = csv2JSON(csv.data);
 
 	const results = json.map(d => {
 		return {
 			name: d.AQHI_AREA.includes('Metro') ? setName(d.AQHI_AREA) : d.AQHI_AREA,
-			// color_today: colourLookup(d.FORECAST_TODAY),
-			// color_tonight: colourLookup(d.FORECAST_TONIGHT),
-			// color_tomorrow: colourLookup(d.FORECAST_TOMORROW),
-			// color_tomorrow_night: colourLookup(d.FORECAST_TOMORROW_NIGHT),
 			current_risk: d.AQHICURRENT_Text1,
 			current_at_risk: d.AQHICURRENT_Text2,
 			current_no_risk: d.AQHICURRENT_Text3,
@@ -29,24 +26,11 @@ async function init(url) {
 			tonight: d.FORECAST_TONIGHT,
 			tomorrow: d.FORECAST_TOMORROW,
 			tomorrow_night: d.FORECAST_TOMORROW_NIGHT
-			// today_text: d.AQHITODAY_Text1,
-			// tonight_text: d.AQHITONIGHT_Text1,
-			// tomorrow_text: d.AQHITOMORROW_Text1,
-			// tomorrow_night_text: d.AQHITOMORROW_NIGHT_Text1
 		}
 	});
 
-
 	// save to local file
-	saveData(results, path.join(`./${data_dir}/${filename}`), 'csv');
-}
-
-function colourLookup(aqhi) {
-	// console.log(aqhi)
-	const score = aqhi === '+' ? 11 : parseInt(aqhi);
-	const colours = ['#00CCFF','#0099CC','#006699','#FFFF0','#FFCC00','#FF9933','#FF6666','#FF0000','#CC0000','#990000','#660000']; // AQHI COLOUR VALUES
-	
-	return colours[score - 1];
+	saveData(results, 'aqhi-data', 'csv', data_dir);
 }
 
 // Function to convert CSV data to JSON
@@ -89,5 +73,7 @@ function setName(area) {
 }
 
 // kick isht off!!!
-init(url);
+init();
 
+
+module.exports = init;
