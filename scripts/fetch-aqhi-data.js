@@ -15,8 +15,6 @@ async function init() {
 	const csv = await axios.get(url);
 	let json = csv2JSON(csv.data);
 
-	console.log(json)
-
 	const results = json.map(d => {
 		return {
 			name: d.AQHI_AREA.includes('Metro') ? setName(d.AQHI_AREA) : d.AQHI_AREA,
