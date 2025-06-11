@@ -1,11 +1,11 @@
-// const fs = require('fs');
 const cheerio = require('cheerio');
-const axios = require('axios').default;
+const puppeteer = require('puppeteer');
 const saveData = require('./save-data');
 
 // VARS
-let data;
+let content, data;
 const data_dir = 'data/';
+const tableCss = '.responsive-table-wrapper';
 const filename = 'fire-bans.csv'; // temp file for data
 
 const header_row = ['Fire centre', 'Campfires', 'Category 2 open burning', 'Category 3 open burning', 'Forest use restrictions'];
@@ -21,27 +21,24 @@ async function processHTML(html) {
 	data.push(header_row);
 
 	// do some scraping
-	$('#body > table > tbody > tr').each((i, el) => {
+	$('.responsive-table-wrapper > table > tbody > tr').each((i, el) => {
 		const row = [];
 		// fire centre names
 		row.push($(el).find('th > a').text());
 
 		$(el).find('td').each((i, el) => {
 			let url = $(el).find('a').attr('href');
-			let alt_tag = $(el).find('img').attr('alt');
+			let alt_tag = $(el).find('img').attr('src');
 
 			if (typeof(alt_tag) !== 'string') {
 				alt_tag = 'None';
 			} else if (alt_tag.includes('permitted')) {
-				// alt_tag = 'U+2705';
 				alt_tag = '✅';
-			} else if (alt_tag.includes('more information')) {
-				// alt_tag = 'U+26A0';
-				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca/${url}`;
+			} else if (alt_tag.includes('attention')) {
+				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
 				alt_tag = `[⚠️](${url})`;
-			} else if (alt_tag.includes('ban')) {
-				// alt_tag = 'U+26D4';
-				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca/${url}`;
+			} else if (alt_tag.includes('bans')) {
+				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
 				alt_tag = `[🚫](${url})`;
 			}
 			row.push(alt_tag);
@@ -56,16 +53,17 @@ async function processHTML(html) {
 async function init(url) {
 	let response;
 	try {
-		response = await axios.get(url, { 
-			reponseType: "arraybuffer",
-			headers: { "Accept-Encoding": "application/xml" }
-		});
+		const browser = await puppeteer.launch({headless: true });
+		const page = await browser.newPage();
+		await page.goto(url);
+		await page.waitForSelector(tableCss); // wait for dynamic html content
+		content = await page.content(); // get the rendered html
 	} catch (err) {
 		console.error(err);
 	}
 
     // scrape the table data
-    data = await processHTML(response.data);
+    data = await processHTML(content);
 
 	// save data
 	saveData(data, 'fire-bans', 'csv', data_dir);
