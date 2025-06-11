@@ -54,11 +54,13 @@ async function init(url) {
 	let content;
 	try {
 		const browser = await puppeteer.launch({
-        	headless: false,
+        	headless: true,
         	args: ['--no-sandbox', '--disable-setuid-sandbox']
     	});
 		const page = await browser.newPage();
-		await page.goto(url);
+		await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
+		await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+		// await page.goto(url);
 		await page.waitForSelector(tableCss); // wait for dynamic html content
 		content = await page.content(); // get the rendered html
 	} catch (err) {
