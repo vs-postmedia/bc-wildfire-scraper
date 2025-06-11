@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 const saveData = require('./save-data');
 
 // VARS
-let content, data;
+let data;
 const data_dir = 'data/';
 const tableCss = '.responsive-table-wrapper';
 const filename = 'fire-bans.csv'; // temp file for data
@@ -51,9 +51,12 @@ async function processHTML(html) {
 }
 
 async function init(url) {
-	let response;
+	let content;
 	try {
-		const browser = await puppeteer.launch({headless: true });
+		const browser = await puppeteer.launch({
+        	headless: false,
+        	args: ['--no-sandbox', '--disable-setuid-sandbox']
+    	});
 		const page = await browser.newPage();
 		await page.goto(url);
 		await page.waitForSelector(tableCss); // wait for dynamic html content
