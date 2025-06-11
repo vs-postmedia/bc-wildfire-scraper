@@ -51,9 +51,9 @@ async function processHTML(html) {
 }
 
 async function init(url) {
-	let content;
+	let browser, content;
 	try {
-		const browser = await puppeteer.launch({
+		browser = await puppeteer.launch({
         	headless: true,
         	args: ['--no-sandbox', '--disable-setuid-sandbox']
     	});
@@ -69,7 +69,7 @@ async function init(url) {
 
     // scrape the table data & close the browswer
     data = await processHTML(content);
-	await browswer.close();
+	browser.close();
 
 	// save data
 	saveData(data, 'fire-bans', 'csv', data_dir);
