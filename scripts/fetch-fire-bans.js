@@ -11,7 +11,7 @@ const filename = 'fire-bans.csv'; // temp file for data
 const header_row = ['Fire centre', 'Campfires', 'Category 2 open burning', 'Category 3 open burning', 'Forest use restrictions'];
  
 async function processHTML(html) {
-	console.log('Processing html...');
+	console.log('Processing fire ban html...');
 	
 	let data = [];
 	const $ = await cheerio.load(html);
@@ -59,7 +59,7 @@ async function init(url) {
     	});
 		const page = await browser.newPage();
 		await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
-		await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+		await page.goto(url, { waitUntil: 'networkidle2' });
 		// await page.goto(url);
 		await page.waitForSelector(tableCss); // wait for dynamic html content
 		content = await page.content(); // get the rendered html
@@ -67,8 +67,9 @@ async function init(url) {
 		console.error(err);
 	}
 
-    // scrape the table data
+    // scrape the table data & close the browswer
     data = await processHTML(content);
+	await browswer.close();
 
 	// save data
 	saveData(data, 'fire-bans', 'csv', data_dir);
