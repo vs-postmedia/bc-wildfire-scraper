@@ -6,11 +6,11 @@ const saveData = require('./save-data');
 // VARS
 const data_dir = 'data';
 const filename = 'aqhi-data';
-const url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv';
+// const url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv';
 
 
 // FUNCTIONS
-async function init() {
+async function init(url) {
 	console.log(`Fetching AQHI data from ${url}`)
 	const csv = await axios.get(url);
 	let json = csv2JSON(csv.data);
@@ -72,8 +72,8 @@ function setName(area) {
 	return name;
 }
 
-// kick isht off!!!
-init();
+// // kick isht off!!!
+// async function init(url);
 
 
 module.exports = init;
