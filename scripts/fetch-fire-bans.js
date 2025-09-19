@@ -7,6 +7,7 @@ let data;
 const data_dir = 'data/';
 const tableCss = '.responsive-table-wrapper';
 const filename = 'fire-bans.csv'; // temp file for data
+const base_url = 'https://www2.gov.bc.ca/gov/content/safety/wildfire-status/prevention/fire-bans-and-restrictions/'
 
 const header_row = ['Fire centre', 'Campfires', 'Category 2 open burning', 'Category 3 open burning', 'Forest use restrictions'];
  
@@ -24,21 +25,26 @@ async function processHTML(html) {
 	$('.responsive-table-wrapper > table > tbody > tr').each((i, el) => {
 		const row = [];
 		// fire centre names
-		row.push($(el).find('th > a').text());
+		let fire_centre = $(el).find('th > a').text();
+		row.push(fire_centre);
+
+		// console.log(fire_centre)
 
 		$(el).find('td').each((i, el) => {
-			let url = $(el).find('a').attr('href');
+			// let url = $(el).find('a').attr('href');
 			let alt_tag = $(el).find('img').attr('src');
 
-			if (typeof(alt_tag) !== 'string') {
+			if (typeof(alt_tag) !== 'string' || !alt_tag) {
 				alt_tag = 'None';
 			} else if (alt_tag.includes('permitted')) {
 				alt_tag = '✅';
 			} else if (alt_tag.includes('attention')) {
-				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
+				// url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
+				url = `${base_url}${fire_centre.toLowerCase().replaceAll(' ', '-')}-bans`;
 				alt_tag = `[⚠️](${url})`;
 			} else if (alt_tag.includes('bans')) {
-				url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
+				// url = url.startsWith('https') ? url : `https://www2.gov.bc.ca${url}`;
+				url = `${base_url}${fire_centre.toLowerCase().replaceAll(' ', '-')}-bans`;
 				alt_tag = `[🚫](${url})`;
 			}
 			row.push(alt_tag);
