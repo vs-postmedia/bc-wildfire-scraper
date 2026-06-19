@@ -68,14 +68,17 @@ async function init(url) {
 		await page.goto(url, { waitUntil: 'networkidle2' });
 		// await page.goto(url);
 		await page.waitForSelector(tableCss); // wait for dynamic html content
+		await page.waitForTimeout(1000); // allow table to fully render
 		content = await page.content(); // get the rendered html
 	} catch (err) {
-		console.error(err);
+		console.error(`Failed to fetch fire bans: ${err.message}`);
+		throw err;
+	} finally {
+		if (browser) browser.close();
 	}
 
-    // scrape the table data & close the browswer
+    // scrape the table data
     data = await processHTML(content);
-	browser.close();
 
 	// save data
 	saveData(data, 'fire-bans', 'csv', data_dir);
