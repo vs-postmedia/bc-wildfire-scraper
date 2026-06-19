@@ -68,7 +68,7 @@ async function init(url) {
 		await page.goto(url, { waitUntil: 'networkidle2' });
 		// await page.goto(url);
 		await page.waitForSelector(tableCss); // wait for dynamic html content
-		await page.waitForTimeout(1000); // allow table to fully render
+		await new Promise(resolve => setTimeout(resolve, 1000)); // allow table to fully render
 		content = await page.content(); // get the rendered html
 	} catch (err) {
 		console.error(`Failed to fetch fire bans: ${err.message}`);
