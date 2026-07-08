@@ -56,25 +56,53 @@ async function processHTML(html) {
 	return data;
 }
 
+const WAIT_STRATEGIES = ['networkidle2', 'load', 'domcontentloaded'];
+const MAX_RETRIES = 3;
+
+async function fetchWithRetry(url) {
+	for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+		let browser;
+		const waitUntil = WAIT_STRATEGIES[attempt - 1] || 'domcontentloaded';
+		try {
+			console.log(`Fire bans fetch attempt ${attempt}/${MAX_RETRIES} (waitUntil: ${waitUntil})`);
+			browser = await puppeteer.launch({
+				headless: true,
+				args: [
+					'--no-sandbox',
+					'--disable-setuid-sandbox',
+					'--disable-blink-features=AutomationControlled',
+					'--disable-dev-shm-usage',
+				]
+			});
+			const page = await browser.newPage();
+			await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36');
+			await page.setViewport({ width: 1280, height: 800 });
+			await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+			await page.goto(url, { waitUntil, timeout: 60000 });
+			await page.waitForSelector(tableCss, { timeout: 30000 });
+			await new Promise(resolve => setTimeout(resolve, 1500));
+			const content = await page.content();
+			return content;
+		} catch (err) {
+			console.error(`Attempt ${attempt} failed: ${err.message}`);
+			if (attempt === MAX_RETRIES) throw err;
+			const delay = attempt * 5000;
+			console.log(`Retrying in ${delay / 1000}s...`);
+			await new Promise(resolve => setTimeout(resolve, delay));
+		} finally {
+			if (browser) browser.close();
+		}
+	}
+}
+
 async function init(url) {
-	let browser, content;
+	let content;
 	try {
-		browser = await puppeteer.launch({
-        	headless: true,
-        	args: ['--no-sandbox', '--disable-setuid-sandbox']
-    	});
-		const page = await browser.newPage();
-		await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
-		await page.goto(url, { waitUntil: 'networkidle2' });
-		// await page.goto(url);
-		await page.waitForSelector(tableCss); // wait for dynamic html content
-		await new Promise(resolve => setTimeout(resolve, 1000)); // allow table to fully render
-		content = await page.content(); // get the rendered html
+		content = await fetchWithRetry(url);
 	} catch (err) {
-		console.error(`Failed to fetch fire bans: ${err.message}`);
-		throw err;
-	} finally {
-		if (browser) browser.close();
+		console.error(`Failed to fetch fire bans after ${MAX_RETRIES} attempts: ${err.message}`);
+		console.warn('Keeping existing fire-bans.csv data.');
+		return;
 	}
 
     // scrape the table data
