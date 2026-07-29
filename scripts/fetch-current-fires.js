@@ -225,7 +225,7 @@ async function convert2json(config) {
 					data.properties.ignition_date = returnHumanReadableDate(data.properties.IGNITN_DT);
 				}
 
-				const propertiesToDrop = ['OBJECTID', 'VERSN_NUM', 'SOURCE', 'TRACK_DATE', 'LOAD DATE', 'LOAD_DATE', 'FEATURE_CD', 'FIRE_SZ_HA'];
+				const propertiesToDrop = ['OBJECTID', 'VERSN_NUM', 'SOURCE', 'TRACK_DATE', 'LOAD DATE', 'LOAD_DATE', 'FEATURE_CD', 'FIRE_STAT', 'FIRE_SZ_HA'];
 				propertiesToDrop.forEach((property) => {
 					delete data.properties[property];
 				});
