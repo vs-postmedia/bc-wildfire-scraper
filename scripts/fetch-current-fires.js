@@ -12,7 +12,7 @@ proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
 
 // VARS
 let data_dir, current_year;
-const fireNameLookup = new Map();
+const fireMetadataLookup = new Map();
 
 function buildDownloadConfigs(currentFireUrl, currentFirePerimetersUrl) {
 	return [
@@ -113,7 +113,7 @@ function ensureDataDirectory() {
 	}
 }
 
-function loadFireNameLookupFromWildfires() {
+function loadFireMetadataFromWildfires() {
 	try {
 		const wildfiresPath = path.join(data_dir, 'wildfires.json');
 		if (!fs.existsSync(wildfiresPath)) {
@@ -126,11 +126,16 @@ function loadFireNameLookupFromWildfires() {
 		}
 
 		wildfires.features.forEach((feature) => {
-			const fireNumber = normalizeFireKey(feature.properties && feature.properties.FIRE_NUM);
-			const rawName = feature.properties && (feature.properties.fire_name || feature.properties.INCIDNT_NM || feature.properties.GEOGRAPHIC);
-			const fireName = rawName && rawName !== 'null' ? String(rawName) : 'Unnamed fire';
-			if (fireNumber && fireName) {
-				fireNameLookup.set(fireNumber, fireName);
+			const props = feature.properties || {};
+			const fireNumber = normalizeFireKey(props.FIRE_NUM);
+			const fireName = props.fire_name || props.INCIDNT_NM || props.GEOGRAPHIC || 'Unnamed fire';
+			if (fireNumber) {
+				fireMetadataLookup.set(fireNumber, {
+					fire_name: fireName && fireName !== 'null' ? String(fireName) : 'Unnamed fire',
+					ignition_date: props.ignition_date,
+					GEOGRAPHIC: props.GEOGRAPHIC,
+					FIRE_CAUSE: props.FIRE_CAUSE
+				});
 			}
 		});
 	} catch (err) {
@@ -142,7 +147,7 @@ async function convert2json(config) {
 	console.log(`Processing shapefile for ${config.label}...`);
 
 	if (config.label === 'current fire perimeters') {
-		loadFireNameLookupFromWildfires();
+		loadFireMetadataFromWildfires();
 	}
 
 	const geojson = {
@@ -162,7 +167,13 @@ async function convert2json(config) {
 			data.properties.fire_name = name === 'null' ? 'Unnamed fire' : name;
 
 			if (config.label === 'current fires' && data.properties.FIRE_NUM) {
-				fireNameLookup.set(normalizeFireKey(data.properties.FIRE_NUM), data.properties.fire_name);
+				const fireNumber = normalizeFireKey(data.properties.FIRE_NUM);
+				fireMetadataLookup.set(fireNumber, {
+					fire_name: data.properties.fire_name,
+					ignition_date: data.properties.ignition_date,
+					GEOGRAPHIC: data.properties.GEOGRAPHIC,
+					FIRE_CAUSE: data.properties.FIRE_CAUSE
+				});
 			}
 
 			if (config.label === 'current fires') {
@@ -183,8 +194,18 @@ async function convert2json(config) {
 
 			if (config.label === 'current fire perimeters') {
 				const fireNumber = normalizeFireKey(data.properties.FIRE_NUM);
-				if (fireNameLookup.has(fireNumber)) {
-					data.properties.fire_name = fireNameLookup.get(fireNumber);
+				const metadata = fireMetadataLookup.get(fireNumber);
+				if (metadata) {
+					data.properties.fire_name = metadata.fire_name || data.properties.fire_name || 'Unnamed fire';
+					if (metadata.ignition_date) {
+						data.properties.ignition_date = metadata.ignition_date;
+					}
+					if (metadata.GEOGRAPHIC !== undefined) {
+						data.properties.GEOGRAPHIC = metadata.GEOGRAPHIC;
+					}
+					if (metadata.FIRE_CAUSE !== undefined) {
+						data.properties.FIRE_CAUSE = metadata.FIRE_CAUSE;
+					}
 				} else {
 					data.properties.fire_name = data.properties.fire_name || 'Unnamed fire';
 				}
@@ -194,7 +215,17 @@ async function convert2json(config) {
 					continue;
 				}
 
-				const propertiesToDrop = ['OBJECTID', 'VERSN_NUM', 'SOURCE', 'TRACK_DATE', 'LOAD DATE'];
+				if (data.properties.FIRE_STAT !== undefined) {
+					data.properties.STATUS = data.properties.FIRE_STAT;
+				}
+				if (data.properties.FIRE_SZ_HA !== undefined && data.properties.FIRE_SZ_HA !== null) {
+					data.properties.CURRENT_SZ = Number(data.properties.FIRE_SZ_HA);
+				}
+				if (data.properties.IGNITN_DT !== undefined) {
+					data.properties.ignition_date = returnHumanReadableDate(data.properties.IGNITN_DT);
+				}
+
+				const propertiesToDrop = ['OBJECTID', 'VERSN_NUM', 'SOURCE', 'TRACK_DATE', 'LOAD DATE', 'LOAD_DATE', 'FEATURE_CD', 'FIRE_SZ_HA'];
 				propertiesToDrop.forEach((property) => {
 					delete data.properties[property];
 				});
@@ -215,7 +246,7 @@ async function convert2json(config) {
 	console.log(`Done processing shapefile for ${config.label}...`);
 	await saveData(geojson, config.outputName, 'json', data_dir);
 	if (config.label === 'current fires') {
-		loadFireNameLookupFromWildfires();
+		loadFireMetadataFromWildfires();
 	}
 	cleanUp(config);
 }
@@ -260,7 +291,7 @@ async function downloadAndUnzip(config) {
 			ensureDataDirectory();
 
 			if (config.label === 'current fire perimeters') {
-				loadFireNameLookupFromWildfires();
+				loadFireMetadataFromWildfires();
 			}
 
 			await new Promise((resolve, reject) => {
