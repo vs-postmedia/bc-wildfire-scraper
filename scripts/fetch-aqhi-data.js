@@ -1,23 +1,31 @@
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const https = require('https');
 const axios = require('axios');
 const saveData = require('./save-data');
 
 // VARS
-const data_dir = 'data';
+const data_dir = path.resolve(__dirname, '..', 'data');
 const filename = 'aqhi-data';
 // const url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv';
 
 
 // FUNCTIONS
 async function init(url) {
-	console.log(`Fetching AQHI data from ${url}`)
-	const csv = await axios.get(url);
-	let json = csv2JSON(csv.data);
+	console.log(`Fetching AQHI data from ${url}`);
 
-	const results = json.map(d => {
-		return {
-			name: d.AQHI_AREA.includes('Metro') ? setName(d.AQHI_AREA) : d.AQHI_AREA,
+	try {
+		const csv = await axios.get(url, {
+			httpsAgent: new https.Agent({
+				rejectUnauthorized: false
+			}),
+			responseType: 'text',
+			validateStatus: status => status < 500
+		});
+		const json = csv2JSON(csv.data || '');
+
+		const results = json.map((d) => ({
+			name: d.AQHI_AREA && d.AQHI_AREA.includes('Metro') ? setName(d.AQHI_AREA) : d.AQHI_AREA,
 			current_risk: d.AQHICURRENT_Text1,
 			current_at_risk: d.AQHICURRENT_Text2,
 			current_no_risk: d.AQHICURRENT_Text3,
@@ -26,11 +34,20 @@ async function init(url) {
 			tonight: d.FORECAST_TONIGHT,
 			tomorrow: d.FORECAST_TOMORROW,
 			tomorrow_night: d.FORECAST_TOMORROW_NIGHT
-		}
-	});
+		}));
 
-	// save to local file
-	saveData(results, 'aqhi-data', 'csv', data_dir, true);
+		// save to local file
+		saveData(results, filename, 'csv', data_dir, true);
+	} catch (err) {
+		console.error(`Failed to fetch AQHI data: ${err.message || err}`);
+
+		if (fs.existsSync(path.join(data_dir, `${filename}.csv`))) {
+			console.log('Using existing AQHI data file.');
+			return;
+		}
+
+		saveData([], filename, 'csv', data_dir, true);
+	}
 }
 
 // Function to convert CSV data to JSON

@@ -1,20 +1,28 @@
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const https = require('https');
 const axios = require('axios');
 const unzipper = require('unzipper');
 const saveData = require('./save-data');
 
 // VARS
-const kml_file = 'data/dispersion.kml';
-const tmp_zip_file = 'data/dispersion.kmz';
-const output_file = '../data/daily-max-dispersion.png'
+const data_dir = path.resolve(__dirname, '..', 'data');
+const kml_file = path.join(data_dir, 'dispersion.kml');
+const tmp_zip_file = path.join(data_dir, 'dispersion.kmz');
+const output_file = path.join(data_dir, 'daily-max-dispersion.png');
 const url = 'https://firesmoke.ca/forecasts/current/dispersion.kmz';
 
 async function init() {
     console.log('Fetching firesmoke data...')
 
-    // get the kmz file & unzip it
-    await fetchFile(url);
+    fs.mkdirSync(data_dir, { recursive: true });
+
+    try {
+        // get the kmz file & unzip it
+        await fetchFile(url);
+    } catch (err) {
+        console.error(`Failed to fetch smoke data: ${err.message || err}`);
+    }
 }
 
 function cleanUp() {
@@ -27,26 +35,31 @@ function cleanUp() {
 }
 
 async function fetchFile(url) {
-    // stream writer where we'll download the data
-    const writeStream = fs.createWriteStream(tmp_zip_file, {flag: 'wx'});
-        
-    try {
-        writeStream.on('open', async f => {
-            // request
-            streamResponse = await axios({
-                url,
-                method: 'GET',
-                responseType: 'stream'
-            });
+    return new Promise((resolve, reject) => {
+        const writeStream = fs.createWriteStream(tmp_zip_file, { flag: 'w' });
 
-            // write zip file data
-            streamResponse.data.pipe(writeStream);
-        });
+        writeStream.on('error', reject);
 
-        writeStream.on('finish', unzipKMZ);
-    } catch(err) {
-        console.err(err)
-    }
+        axios({
+            url,
+            method: 'GET',
+            responseType: 'stream',
+            validateStatus: status => status < 500,
+            httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+            })
+        })
+            .then((response) => {
+                response.data.on('error', reject);
+                response.data.pipe(writeStream);
+                writeStream.on('finish', () => {
+                    unzipKMZ()
+                        .then(resolve)
+                        .catch(reject);
+                });
+            })
+            .catch(reject);
+    });
 }
 
 function getCurrentDate() {
@@ -63,7 +76,7 @@ async function unzipKMZ() {
 
     fs.createReadStream(tmp_zip_file)
         .pipe(unzipper.ParseOne(regex))
-        .pipe(fs.createWriteStream(path.join(__dirname, output_file), {flag: 'wx'}))
+        .pipe(fs.createWriteStream(output_file, {flag: 'wx'}))
 		// .pipe(unzipper.Extract({ path: kml_file }))
         .on('close', cleanUp);
 }

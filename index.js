@@ -13,17 +13,21 @@ const aqhi_url = 'https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv';
 const current_fire_perimeters_url = 'https://pub.data.gov.bc.ca/datasets/cdfc2d7b-c046-4bf0-90ac-4897232619e1/';
 
 async function init() {
-	// get current fires and perimeters from BC data
-	await fetchCurrentFires(data_dir, current_fires_url, current_fire_perimeters_url);
+	try {
+		// get current fires and perimeters from BC data
+		await fetchCurrentFires(data_dir, current_fires_url, current_fire_perimeters_url);
 
-	// get latest firesmoke data
-	fetchSmokeData();
+		// get latest firesmoke data
+		await fetchSmokeData();
 
-	// get latest fire ban data
-	fetchFireBans(fire_bans_url);
+		// get latest fire ban data
+		await fetchFireBans(fire_bans_url);
 
-	// get latest AQHI forecasts
-	fetchAqhiData(aqhi_url);
+		// get latest AQHI forecasts
+		await fetchAqhiData(aqhi_url);
+	} catch (err) {
+		console.error('Scraper run failed:', err.message || err);
+	}
 }
 
 init();

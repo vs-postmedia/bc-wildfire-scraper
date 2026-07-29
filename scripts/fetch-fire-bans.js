@@ -1,10 +1,11 @@
+const path = require('path');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
 const saveData = require('./save-data');
 
 // VARS
 let data;
-const data_dir = 'data/';
+const data_dir = path.resolve(__dirname, '..', 'data');
 const tableCss = '.responsive-table-wrapper';
 const filename = 'fire-bans.csv'; // temp file for data
 const base_url = 'https://www2.gov.bc.ca/gov/content/safety/wildfire-status/prevention/fire-bans-and-restrictions/'
