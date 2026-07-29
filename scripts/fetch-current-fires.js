@@ -12,6 +12,7 @@ proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
 
 // VARS
 let data_dir, current_year;
+const fireNameLookup = new Map();
 
 function buildDownloadConfigs(currentFireUrl, currentFirePerimetersUrl) {
 	return [
@@ -51,6 +52,10 @@ function buildCandidateUrls(url, fallbackFileName) {
 }
 
 // FUNCTIONS
+function normalizeFireKey(value) {
+	return String(value || '').trim().toUpperCase();
+}
+
 function transformCoordinate(coordinate) {
 	if (!Array.isArray(coordinate) || coordinate.length < 2) {
 		return coordinate;
@@ -108,8 +113,37 @@ function ensureDataDirectory() {
 	}
 }
 
+function loadFireNameLookupFromWildfires() {
+	try {
+		const wildfiresPath = path.join(data_dir, 'wildfires.json');
+		if (!fs.existsSync(wildfiresPath)) {
+			return;
+		}
+
+		const wildfires = JSON.parse(fs.readFileSync(wildfiresPath, 'utf8'));
+		if (!wildfires || !Array.isArray(wildfires.features)) {
+			return;
+		}
+
+		wildfires.features.forEach((feature) => {
+			const fireNumber = normalizeFireKey(feature.properties && feature.properties.FIRE_NUM);
+			const rawName = feature.properties && (feature.properties.fire_name || feature.properties.INCIDNT_NM || feature.properties.GEOGRAPHIC);
+			const fireName = rawName && rawName !== 'null' ? String(rawName) : 'Unnamed fire';
+			if (fireNumber && fireName) {
+				fireNameLookup.set(fireNumber, fireName);
+			}
+		});
+	} catch (err) {
+		console.error(err.stack || err);
+	}
+}
+
 async function convert2json(config) {
 	console.log(`Processing shapefile for ${config.label}...`);
+
+	if (config.label === 'current fire perimeters') {
+		loadFireNameLookupFromWildfires();
+	}
 
 	const geojson = {
 		type: 'FeatureCollection',
@@ -124,10 +158,19 @@ async function convert2json(config) {
 			const data = result.value;
 			data.geometry = reprojectGeometry(data.geometry);
 			data.properties.last_update = Date.now();
-			let name = data.properties.INCIDNT_NM !== null ? data.properties.INCIDNT_NM : data.properties.GEOGRAPHIC;
+			const name = data.properties.INCIDNT_NM || data.properties.GEOGRAPHIC || 'Unnamed fire';
 			data.properties.fire_name = name === 'null' ? 'Unnamed fire' : name;
 
+			if (config.label === 'current fires' && data.properties.FIRE_NUM) {
+				fireNameLookup.set(normalizeFireKey(data.properties.FIRE_NUM), data.properties.fire_name);
+			}
+
 			if (config.label === 'current fires') {
+				if (String(data.properties.STATUS || '').trim().toLowerCase() === 'out') {
+					result = await source.read();
+					continue;
+				}
+
 				data.properties.ignition_date = returnHumanReadableDate(data.properties.IGNITN_DT);
 
 				if (data.properties.CURRENT_SI === null) {
@@ -139,6 +182,13 @@ async function convert2json(config) {
 			}
 
 			if (config.label === 'current fire perimeters') {
+				const fireNumber = normalizeFireKey(data.properties.FIRE_NUM);
+				if (fireNameLookup.has(fireNumber)) {
+					data.properties.fire_name = fireNameLookup.get(fireNumber);
+				} else {
+					data.properties.fire_name = data.properties.fire_name || 'Unnamed fire';
+				}
+
 				if (data.properties.FIRE_STAT === 'Out') {
 					result = await source.read();
 					continue;
@@ -164,6 +214,9 @@ async function convert2json(config) {
 
 	console.log(`Done processing shapefile for ${config.label}...`);
 	await saveData(geojson, config.outputName, 'json', data_dir);
+	if (config.label === 'current fires') {
+		loadFireNameLookupFromWildfires();
+	}
 	cleanUp(config);
 }
 
@@ -171,14 +224,18 @@ function cleanUp(config) {
 	const ext = ['dbf', 'prj', 'shp', 'shx'];
 
 	ext.forEach((d) => {
-		fs.rm(path.join(data_dir, `${path.basename(config.shpFileName, '.shp')}.${d}`), { recursive: true, force: true }, err => {
-			if (err) console.error(err);
-		});
+		try {
+			fs.rmSync(path.join(data_dir, `${path.basename(config.shpFileName, '.shp')}.${d}`), { recursive: true, force: true });
+		} catch (err) {
+			console.error(err);
+		}
 	});
 
-	fs.rm(path.join(data_dir, config.zipFileName), { recursive: true, force: true }, err => {
-		if (err) console.error(err);
-	});
+	try {
+		fs.rmSync(path.join(data_dir, config.zipFileName), { recursive: true, force: true });
+	} catch (err) {
+		console.error(err);
+	}
 }
 
 // download & unzip current fire data in shapefile form
@@ -201,6 +258,10 @@ async function downloadAndUnzip(config) {
 			}
 
 			ensureDataDirectory();
+
+			if (config.label === 'current fire perimeters') {
+				loadFireNameLookupFromWildfires();
+			}
 
 			await new Promise((resolve, reject) => {
 				const writeStream = fs.createWriteStream(path.join(data_dir, config.zipFileName), { flags: 'w' });
@@ -242,7 +303,7 @@ function unzipCurrentFires(config) {
 
 async function init(dir, current_fire_url, current_fire_perimeters_url) {
 	// set data directory & current year
-	data_dir = dir;
+	data_dir = dir ? path.resolve(__dirname, '..', dir) : path.resolve(__dirname, '..', 'data');
 	current_year = new Date().getUTCFullYear();
 	ensureDataDirectory();
 
