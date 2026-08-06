@@ -2,6 +2,8 @@
 
 Downloads:
 * Current wildfire data from 'https://pub.data.gov.bc.ca/datasets/2790e3f7-6395-4230-8545-04efb5a18800/prot_current_fire_points.zip' & converts to csv/json.
+* Evacuation orders & alerts: https://catalogue.data.gov.bc.ca/dataset/evacuation-orders-and-alerts
+* Current fire perimeters: https://catalogue.data.gov.bc.ca/dataset/bc-wildfire-fire-perimeters-current
 * FireSmoke PM2.5 data from https://firesmoke.ca/forecasts/current/dispersion.kmz
 * AQHI forecast data from: https://envistaweb.env.gov.bc.ca/aqo/csv/AQHIWeb.csv
 
